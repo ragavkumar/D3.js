@@ -2,14 +2,14 @@
 
 // Define SVG area dimensions
 var svgWidth = 960;
-var svgHeight = 660;
+var svgHeight = 500;
 
 // Define the chart's margins as an object
 var chartMargin = {
-  top: 30,
-  right: 30,
-  bottom: 30,
-  left: 30
+  top: 20,
+  right: 40,
+  bottom: 80,
+  left: 100
 };
 
 // Define dimensions of the chart area
@@ -27,8 +27,16 @@ var svg = d3.select("#scatter")
 var chartGroup = svg.append("g")
   .attr("transform", `translate(${chartMargin.left}, ${chartMargin.top})`);
 
+var tip = d3.tip()
+.attr('class', 'd3-tip')
+.html(function(d) {
+  return d.state + "<br/>H:"+ d.healthcare + " ,P:"+ d.poverty;
+})
+
+chartGroup.call(tip);
+
 // Load data from csv
-d3.csv("assets/data/data.csv", function(csvData){
+d3.csv("assets/data/data.csv").then(function(csvData){
   // Log an error if one exists
   // if (error) return console.warn(error);
   // if (error) throw error;
@@ -37,7 +45,7 @@ d3.csv("assets/data/data.csv", function(csvData){
   console.log(csvData);
   csvDataArr = [csvData];
   // Cast values to numbers for each piece of csvData
-  csvDataArr.forEach(function(d) {
+  csvData.forEach(function(d) {
     d.age = +d.age;
     d.healthcare = +d.healthcare;
     d.obesity = +d.obesity;
@@ -48,11 +56,11 @@ d3.csv("assets/data/data.csv", function(csvData){
 
   // Create a linear scale for the horizontal axis.
   var xLinearScale = d3.scaleLinear()
-  .domain([0, d3.max(csvData, d => d.poverty)])
+  .domain([d3.min(csvData, d => d.poverty)-2, d3.max(csvData, d => d.poverty)+2])
   .range([0, chartWidth]);
   // Create a linear scale for the vertical axis.
   var yLinearScale = d3.scaleLinear()
-  .domain([0, d3.max(csvData, d => d.healthcare)])
+  .domain([d3.min(csvData, d => d.healthcare)-2, d3.max(csvData, d => d.healthcare)+2])
   .range([chartHeight, 0]);
 
   // Create two new functions with scales as arguments
@@ -68,39 +76,43 @@ d3.csv("assets/data/data.csv", function(csvData){
   chartGroup.append("g")
     .attr("transform", `translate(0, ${chartHeight})`)
     .call(xAxis);
-  
-    // var circlesGroup = svg.selectAll("g circlesGroup").data(csvData).enter()
 
-    // circlesGroup
-    // .append("circle")
-    // .attr("cx", d => xLinearScale(d.healthcare))
-    // .attr("cy", d => yLinearScale(d.poverty))
-    // .attr("r", "15")
-    // .attr("fill", "pink")
-    // .attr("opacity", ".5");
-
-  chartGroup.selectAll("circle")
-  .data(csvData)
-  .enter()
-  .append("circle")  // create a new circle for each value
-      // .attr("cy", function (d) { return yLinearScale(d.healthcare); } ) // translate y value to a pixel
-      // .attr("cx", function (d) { return xLinearScale(d.poverty); } ) // translate x value
-      // .attr("cx", function (d,i) { return xLinearScale(d.poverty[i]); } )
-      .attr("cx", d => xLinearScale(d))
-      .attr("cy", d => yLinearScale(d))
-      .attr("fill", "red")
-      .attr("r", "10"); // radius of circle
+  var circleGroup = chartGroup.selectAll("circle").data(csvData).enter();
   
-  // circles.data(csvData)
-  //   .enter()
-  //   .append("circle")
-  //   .attr("cx", 10)
-  //   .attr("cy", 10)
-  //   .attr("r", function(d) {
-  //     return d;
-  //   })
-  //   .attr("stroke", "black")
-  //   .attr("stroke-width", "5")
-  //   .attr("fill", "red");
+  circleGroup
+      .append("circle")  // create a new circle for each value
+      .classed("stateCircle", true)
+      .attr("cy", function (d) { return yLinearScale(d.healthcare); } ) // translate y value to a pixel
+      .attr("cx", function (d) { return xLinearScale(d.poverty); } ) // translate x value
+      .attr("r", "10") // radius of circle
+      .on('mouseover', tip.show)
+      .on('mouseout', tip.hide);
+
+  
+  circleGroup      
+      .append("text")
+      .text(d=>d.abbr)
+      .attr("text-anchor", "middle")  
+      .style("font-size", "12px")
+      .style("fill", "black")
+      .attr("dy", function (d) { return yLinearScale(d.healthcare)+4;}) 
+      .attr("dx", function (d) { return xLinearScale(d.poverty);})
+    
+  var labelsGroup = chartGroup.append("g").attr("transform", `translate(${chartWidth / 2}, ${chartHeight + 20})`);
+      
+  var xlabel = labelsGroup.append("text")
+    .attr("x", 0)
+    .attr("y", 20)
+    .classed("active", true)
+    .text("In Poverty(%)");
+
+  // append y axis
+  chartGroup.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", 0 - chartMargin.left + 35)
+    .attr("x", 0 - (chartHeight / 2))
+    .attr("dy", "1em")
+    .classed("active", true)
+    .text("Lacks Healthcare (%)");     
 
 });
