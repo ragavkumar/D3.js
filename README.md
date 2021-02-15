@@ -1,7 +1,3 @@
-# Geo-location-Weather Dashboard
-- Generated random geo-coordinates (NumPy)
-- Extracted closest cities (CitiPy)
-- Pulled recent weather data (OpenWeatherMap API, JSON traversals)
-- Visualized results (Matplotlib)
-- Built a web dashboard (HTML, BootstrapCDN, CSS3) to visualize results
-- Link: https://ragavkumar.github.io/HTML_CSS_Bootstrap/
+# Census Data Dynamic Charting
+- Built multi-axes scatterplot (D3 mouse events) to explore relationships between population demographics (age, income) and health risk factors (obesity, smoking) by state (D3.js)
+- Dataset: American Community Survey
